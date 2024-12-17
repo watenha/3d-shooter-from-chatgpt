@@ -39,6 +39,46 @@
         // Player (camera position)
         camera.position.set(0, 1.5, 5);
 
+        // Movement controls
+        const playerSpeed = 0.1;
+        const rotationSpeed = 0.02;
+        const keys = {
+            w: false,
+            a: false,
+            s: false,
+            d: false,
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'w') keys.w = true;
+            if (e.key === 'a') keys.a = true;
+            if (e.key === 's') keys.s = true;
+            if (e.key === 'd') keys.d = true;
+            if (e.key === 'ArrowLeft') keys.ArrowLeft = true;
+            if (e.key === 'ArrowRight') keys.ArrowRight = true;
+            if (e.key === ' ') shootBullet(); // Press space to shoot
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'w') keys.w = false;
+            if (e.key === 'a') keys.a = false;
+            if (e.key === 's') keys.s = false;
+            if (e.key === 'd') keys.d = false;
+            if (e.key === 'ArrowLeft') keys.ArrowLeft = false;
+            if (e.key === 'ArrowRight') keys.ArrowRight = false;
+        });
+
+        function movePlayer() {
+            if (keys.w) camera.translateZ(-playerSpeed);
+            if (keys.s) camera.translateZ(playerSpeed);
+            if (keys.a) camera.translateX(-playerSpeed);
+            if (keys.d) camera.translateX(playerSpeed);
+            if (keys.ArrowLeft) camera.rotation.y += rotationSpeed;
+            if (keys.ArrowRight) camera.rotation.y -= rotationSpeed;
+        }
+
         // Target cubes
         const targets = [];
         function createTarget() {
@@ -62,11 +102,6 @@
             scene.add(bullet);
             bullets.push(bullet);
         }
-
-        // Handle input
-        document.addEventListener('keydown', (e) => {
-            if (e.key === ' ') shootBullet(); // Press space to shoot
-        });
 
         // Animate the scene
         function animate() {
@@ -93,6 +128,7 @@
                 });
             });
 
+            movePlayer(); // Handle player movement
             renderer.render(scene, camera);
         }
         animate();
