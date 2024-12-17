@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Shooter Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+</head>
+<body>
+    <script>
+        // Scene, Camera, and Renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Add lighting
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 5, 5);
+        scene.add(light);
+
+        // Ground plane
+        const planeGeometry = new THREE.PlaneGeometry(100, 100);
+        const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x555555 });
+        const ground = new THREE.Mesh(planeGeometry, planeMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        scene.add(ground);
+
+        // Player (camera position)
+        camera.position.set(0, 1.5, 5);
+
+        // Target cubes
+        const targets = [];
+        function createTarget() {
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+            const target = new THREE.Mesh(geometry, material);
+            target.position.set(Math.random() * 10 - 5, 0.5, Math.random() * -20);
+            scene.add(target);
+            targets.push(target);
+        }
+        for (let i = 0; i < 5; i++) createTarget();
+
+        // Bullets
+        const bullets = [];
+        function shootBullet() {
+            const geometry = new THREE.SphereGeometry(0.1, 8, 8);
+            const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            const bullet = new THREE.Mesh(geometry, material);
+            bullet.position.copy(camera.position);
+            bullet.velocity = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).multiplyScalar(0.5);
+            scene.add(bullet);
+            bullets.push(bullet);
+        }
+
+        // Handle input
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') shootBullet(); // Press space to shoot
+        });
+
+        // Animate the scene
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Move bullets
+            bullets.forEach((bullet, index) => {
+                bullet.position.add(bullet.velocity);
+                if (bullet.position.z < -50) {
+                    scene.remove(bullet);
+                    bullets.splice(index, 1);
+                }
+            });
+
+            // Check for collisions with targets
+            bullets.forEach((bullet, bulletIndex) => {
+                targets.forEach((target, targetIndex) => {
+                    if (bullet.position.distanceTo(target.position) < 0.5) {
+                        scene.remove(target);
+                        scene.remove(bullet);
+                        bullets.splice(bulletIndex, 1);
+                        targets.splice(targetIndex, 1);
+                    }
+                });
+            });
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize handling
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        });
+    </script>
+</body>
+</html>
